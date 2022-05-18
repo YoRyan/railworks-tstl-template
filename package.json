@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "gulp": "^4.0.2",
+    "gulp-filter": "^7.0.0",
+    "gulp-flatmap": "^1.0.2",
+    "gulp-intermediate": "^5.0.0",
+    "gulp-rename": "^2.0.0",
+    "lua-types": "github:YoRyan/TypeScriptToLua-lua-types#lua5.0",
+    "npx": "^10.2.2",
+    "typescript": "^4.6.4",
+    "typescript-to-lua": "file:typescript-to-lua-for-5.0-8207b017a8cda966e75c77d5e5a9c766b23d8da4.tgz"
+  },
+  "devDependencies": {
+    "prettier": "^2.6.2"
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "lib": ["esnext"],
+        "moduleResolution": "node",
+        "strict": true,
+        "types": ["lua-types/5.0"]
+    },
+    "include": ["src"]
+}
