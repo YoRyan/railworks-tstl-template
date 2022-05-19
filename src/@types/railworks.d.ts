@@ -88,6 +88,8 @@ declare global {
      */
     var OnCameraLeave: () => void;
 
+    var OnControlValueChange: (name: string, index: number, value: number) => void;
+
     /**
      * This is the event handler function it handles any event calls from the
      * scenario system.
