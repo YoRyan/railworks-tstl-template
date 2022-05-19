@@ -25,7 +25,7 @@ export type AllNodes = "all";
  * A direction used by rail vehicles to send consist messages and search for
  * track features.
  */
-export enum RVDirection {
+export enum ConsistDirection {
     Forward = 0,
     Backward = 1,
 }
@@ -392,7 +392,7 @@ export class RailVehicle extends RenderedEntity {
      * message to the vehicle behind
      * @returns 1 = if there was a next/previous rail vehicle
      */
-    SendConsistMessage(message: number, argument: string, direction: RVDirection) {
+    SendConsistMessage(message: number, argument: string, direction: ConsistDirection) {
         const [r] = Call(this.fn("SendConsistMessage"), message, argument, direction);
         return r === 1;
     }
@@ -430,7 +430,7 @@ export class RailVehicle extends RenderedEntity {
      * to the signal.
      */
     GetNextRestrictiveSignal(
-        direction: RVDirection = RVDirection.Forward,
+        direction: ConsistDirection = ConsistDirection.Forward,
         minDistance: number = 0,
         maxDistance: number = 10000
     ): SearchFailed | [basicState: BasicSignalState, distance: number, proState: ProSignalState] {
@@ -453,7 +453,7 @@ export class RailVehicle extends RenderedEntity {
      * second, and the distance to it in metres.
      */
     GetNextSpeedLimit(
-        direction: RVDirection = RVDirection.Forward,
+        direction: ConsistDirection = ConsistDirection.Forward,
         minDistance: number = 0,
         maxDistance: number = 10000
     ): SearchFailed | [found: SpeedLimitType, speed: number, distance: number] {
