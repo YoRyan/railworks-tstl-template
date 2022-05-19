@@ -71,7 +71,10 @@ export function reject<T>(predicate: (value: T) => boolean): (eventStream: Strea
  * is called with the accumulator and the current value. The parameter initial
  * is the initial value of the accumulator
  */
-export function fold<T>(step: (accumulated: T, value: T) => T, initial: T): (eventStream: Stream<T>) => Stream<T> {
+export function fold<TAccum, TValue>(
+    step: (accumulated: TAccum, value: TValue) => TAccum,
+    initial: TAccum
+): (eventStream: Stream<TValue>) => Stream<TAccum> {
     return function (eventStream) {
         return function (next) {
             let accumulated = initial;
@@ -98,13 +101,12 @@ export function merge<A, B>(eventStreamA: Stream<A>): (eventStreamB: Stream<B>) 
  * Takes an eventStream, performs a series of operations on it and returns
  * a modified stream. All FRP operations are curried by default.
  */
-export function compose(eventStream: Stream<any>, ...operations: ((eventStream: Stream<any>) => Stream<any>)[]) {
-    if (operations.length === 0) {
-        return eventStream;
-    }
-
+export function compose(
+    eventStream: Stream<any>,
+    ...operations: ((eventStream: Stream<any>) => Stream<any>)[]
+): Stream<any> {
     let operation = operations.shift();
-    return compose(operation(eventStream), ...operations);
+    return operation === undefined ? eventStream : compose(operation(eventStream), ...operations);
 }
 
 /**
@@ -159,7 +161,7 @@ export function liftN<T>(combine: (...args: any[]) => T, ...behaviors: any[]): (
 
 export function hub<T>(): (eventStream: Stream<T>) => Stream<T> {
     return function (eventStream) {
-        let nexts = [];
+        let nexts: ((value: T) => void)[] = [];
         let isStarted = false;
 
         return function (next) {
