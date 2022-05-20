@@ -66,7 +66,7 @@ declare global {
      * @param direction The direction the message was sent, relative to the
      * sender.
      */
-    var OnConsistMessage: (id: number, content: string, direction: rw.SignalDirection) => void;
+    var OnConsistMessage: (id: number, content: string, direction: rw.ConsistDirection) => void;
 
     /**
      * A function that is called when the engine receives a new message from a
