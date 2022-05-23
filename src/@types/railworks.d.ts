@@ -35,6 +35,10 @@ declare global {
         ...args: (string | number | boolean)[]
     ): LuaMultiReturn<(string | number | boolean | undefined)[]>;
 
+    /**
+     * True if the game is running using the RailWorks64.exe executable.
+     * @returns Whether the game is running in 64-bit mode.
+     */
     export function Is64Bit(): boolean;
 
     const mEntityAddress: number;
@@ -88,6 +92,11 @@ declare global {
      */
     var OnCameraLeave: () => void;
 
+    /**
+     * Called by the game when a control is manipulated by some means other
+     * than SetControlValue() method in lieu of actually changing the control
+     * value.
+     */
     var OnControlValueChange: (name: string, index: number, value: number) => void;
 
     /**
