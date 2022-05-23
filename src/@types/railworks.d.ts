@@ -52,11 +52,6 @@ declare global {
     var Initialise: () => void;
 
     /**
-     * A function that is called when the player assumes control of the consist.
-     */
-    var Setup: () => void;
-
-    /**
      * A function that is called every frame if BeginUpdate() has been called.
      * @param interval The time, in seconds, since the last update.
      */
