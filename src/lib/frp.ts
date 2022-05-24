@@ -135,7 +135,7 @@ export function throttle<T>(ms: number): (eventStream: Stream<T>) => Stream<T> {
         return function (next) {
             let last = 0;
             eventStream(function (value) {
-                let now = rw.o.GetSimulationTime() / 1000;
+                let now = rw.o.GetSimulationTime() * 1000;
                 if (last === 0 || now - last > ms) {
                     next(value);
                     last = now;
