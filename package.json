@@ -8,7 +8,7 @@
     "lua-types": "github:YoRyan/TypeScriptToLua-lua-types#lua5.0",
     "npx": "^10.2.2",
     "typescript": "^4.6.4",
-    "typescript-to-lua": "file:typescript-to-lua-for-5.0-117d3c11ab4066215b1ffb2455119f86c5d01389.tgz"
+    "typescript-to-lua": "file:typescript-to-lua-for-5.0-58ebd67271eed931e8bdc35dcd6ba4e06861a70c.tgz"
   },
   "devDependencies": {
     "prettier": "^2.6.2"
