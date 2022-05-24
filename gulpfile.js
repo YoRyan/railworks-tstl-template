@@ -44,7 +44,10 @@ async function compileLua(tempDir, luaPath) {
     );
 
     const result = tstl.transpileProject(tsconfig, {
+        target: ts.ScriptTarget.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
         types: ["lua-types/5.0"],
+        strict: true,
         typeRoots: [path.join(tempDir, "@types")],
         luaTarget: tstl.LuaTarget.Lua50,
         luaLibImport: tstl.LuaLibImportKind.Inline,
