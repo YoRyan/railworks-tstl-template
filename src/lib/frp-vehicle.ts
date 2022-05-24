@@ -71,7 +71,7 @@ export class FrpVehicle extends FrpEntity {
     /**
      * Convenient access to the methods for a rail vehicle.
      */
-    public rv = rw.o as rw.RailVehicle;
+    public rv = new rw.RailVehicle("");
 
     private onCvChangeList = new FrpList<ControlValueChange>();
     private consistMessageList = new FrpList<ConsistMessage>();
@@ -163,30 +163,32 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new event stream.
      */
     createAuthorityStream(): frp.Stream<VehicleAuthority> {
-        return frp.compose(
-            this.createUpdateStream(),
-            frp.map(_ => this.rv.GetSpeed()),
-            frp.fold<SensedDirection, number>((dir, speed) => {
-                if (speed > c.stopSpeed) {
-                    return SensedDirection.Forward;
-                } else if (speed < -c.stopSpeed) {
-                    return SensedDirection.Backward;
-                } else {
-                    return dir;
-                }
-            }, SensedDirection.None),
-            frp.map((dir: SensedDirection) => {
-                if (this.rv.GetIsPlayer()) {
-                    return VehicleAuthority.IsPlayer;
-                } else {
-                    return {
-                        [SensedDirection.Forward]: VehicleAuthority.IsAiMovingForward,
-                        [SensedDirection.None]: VehicleAuthority.IsAiParked,
-                        [SensedDirection.Backward]: VehicleAuthority.IsAiMovingBackward,
-                    }[dir];
-                }
-            })
-        );
+        const direction$: frp.Stream<SensedDirection> = frp.compose(
+                this.createUpdateStream(),
+                frp.map(_ => this.rv.GetSpeed()),
+                frp.fold<SensedDirection, number>((dir, speed) => {
+                    if (speed > c.stopSpeed) {
+                        return SensedDirection.Forward;
+                    } else if (speed < -c.stopSpeed) {
+                        return SensedDirection.Backward;
+                    } else {
+                        return dir;
+                    }
+                }, SensedDirection.None)
+            ),
+            authority = frp.liftN(
+                (direction: SensedDirection, isPlayer: boolean) =>
+                    isPlayer
+                        ? VehicleAuthority.IsPlayer
+                        : {
+                              [SensedDirection.Forward]: VehicleAuthority.IsAiMovingForward,
+                              [SensedDirection.None]: VehicleAuthority.IsAiParked,
+                              [SensedDirection.Backward]: VehicleAuthority.IsAiMovingBackward,
+                          }[direction],
+                frp.stepper(direction$, SensedDirection.None),
+                () => this.rv.GetIsPlayer()
+            );
+        return frp.map(_ => frp.snapshot(authority))(this.createUpdateStream());
     }
 
     setup() {

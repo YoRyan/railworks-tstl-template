@@ -850,12 +850,6 @@ export class Light extends Entity {
     }
 }
 
-/** Invoke methods on the owning entity. */
-export const o = new ScriptedEntity("");
-
-/** Invoke methods on the owning entity and all its descendants. */
-export const od = new ScriptedEntity("*");
-
 /**
  * The core scenario scripting module.
  */

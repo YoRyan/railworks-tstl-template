@@ -10,7 +10,7 @@ export class FrpEngine extends FrpVehicle {
     /**
      * Convenient acces to the methods for an engine.
      */
-    public eng = rw.o as rw.Engine;
+    public eng = new rw.Engine("");
 
     private signalMessageList = new FrpList<string>();
 

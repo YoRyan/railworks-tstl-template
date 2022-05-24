@@ -8,6 +8,8 @@ import * as rw from "./railworks";
 
 export type Stream<T> = (next: (value: T) => void) => void;
 
+const e = new rw.ScriptedEntity("");
+
 /**
  * Takes an eventStream and a function that transforms the value of the Event.
  * Returns a new Event that emits the transformed Value
@@ -135,7 +137,7 @@ export function throttle<T>(ms: number): (eventStream: Stream<T>) => Stream<T> {
         return function (next) {
             let last = 0;
             eventStream(function (value) {
-                let now = rw.o.GetSimulationTime() * 1000;
+                let now = e.GetSimulationTime() * 1000;
                 if (last === 0 || now - last > ms) {
                     next(value);
                     last = now;
@@ -146,8 +148,8 @@ export function throttle<T>(ms: number): (eventStream: Stream<T>) => Stream<T> {
 }
 
 export function snapshot<T>(behavior: (() => T) | T): T {
-    if (behavior instanceof Function) {
-        return behavior();
+    if (typeof behavior === "function") {
+        return (behavior as () => T)();
     }
     return behavior;
 }

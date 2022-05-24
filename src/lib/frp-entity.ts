@@ -38,14 +38,11 @@ export class FrpEntity {
     /**
      * Convenient access to the methods for a scripted entity.
      */
-    public e = rw.o;
-    /**
-     * True if this entity is requesting an update once per frame.
-     */
-    protected updatingEveryFrame = false;
+    public e = new rw.ScriptedEntity("");
 
     private onInit: (this: void) => void;
     private updateList = new FrpList<number>();
+    private updatingEveryFrame = false;
 
     /**
      * Construct a new entity.
