@@ -8,6 +8,8 @@ import * as rw from "./railworks";
 
 export type Stream<T> = (next: (value: T) => void) => void;
 
+type Behavior<T> = (() => T) | T;
+
 const e = new rw.ScriptedEntity("");
 
 /**
@@ -106,6 +108,67 @@ export function merge<A, B>(eventStreamA: Stream<A>): (eventStreamB: Stream<B>) 
 export function compose(
     eventStream: Stream<any>,
     ...operations: ((eventStream: Stream<any>) => Stream<any>)[]
+): Stream<any>; // Need to repeat this declaration here so that TypeScript considers operations a rest argument.
+export function compose<A, B>(eventStream: Stream<A>, op0: (eventStream: Stream<A>) => Stream<B>): Stream<B>;
+export function compose<A, B, C>(
+    eventStream: Stream<A>,
+    op0: (eventStream: Stream<A>) => Stream<B>,
+    op1: (eventStream: Stream<B>) => Stream<C>
+): Stream<C>;
+export function compose<A, B, C, D>(
+    eventStream: Stream<A>,
+    op0: (eventStream: Stream<A>) => Stream<B>,
+    op1: (eventStream: Stream<B>) => Stream<C>,
+    op2: (eventStream: Stream<C>) => Stream<D>
+): Stream<D>;
+export function compose<A, B, C, D, E>(
+    eventStream: Stream<A>,
+    op0: (eventStream: Stream<A>) => Stream<B>,
+    op1: (eventStream: Stream<B>) => Stream<C>,
+    op2: (eventStream: Stream<C>) => Stream<D>,
+    op3: (eventStream: Stream<D>) => Stream<E>
+): Stream<E>;
+export function compose<A, B, C, D, E, F>(
+    eventStream: Stream<A>,
+    op0: (eventStream: Stream<A>) => Stream<B>,
+    op1: (eventStream: Stream<B>) => Stream<C>,
+    op2: (eventStream: Stream<C>) => Stream<D>,
+    op3: (eventStream: Stream<D>) => Stream<E>,
+    op4: (eventStream: Stream<E>) => Stream<F>
+): Stream<F>;
+export function compose<A, B, C, D, E, F, G>(
+    eventStream: Stream<A>,
+    op0: (eventStream: Stream<A>) => Stream<B>,
+    op1: (eventStream: Stream<B>) => Stream<C>,
+    op2: (eventStream: Stream<C>) => Stream<D>,
+    op3: (eventStream: Stream<D>) => Stream<E>,
+    op4: (eventStream: Stream<E>) => Stream<F>,
+    op5: (eventStream: Stream<F>) => Stream<G>
+): Stream<G>;
+export function compose<A, B, C, D, E, F, G, H>(
+    eventStream: Stream<A>,
+    op0: (eventStream: Stream<A>) => Stream<B>,
+    op1: (eventStream: Stream<B>) => Stream<C>,
+    op2: (eventStream: Stream<C>) => Stream<D>,
+    op3: (eventStream: Stream<D>) => Stream<E>,
+    op4: (eventStream: Stream<E>) => Stream<F>,
+    op5: (eventStream: Stream<F>) => Stream<G>,
+    op6: (eventStream: Stream<G>) => Stream<H>
+): Stream<H>;
+export function compose<A, B, C, D, E, F, G, H, I>(
+    eventStream: Stream<A>,
+    op0: (eventStream: Stream<A>) => Stream<B>,
+    op1: (eventStream: Stream<B>) => Stream<C>,
+    op2: (eventStream: Stream<C>) => Stream<D>,
+    op3: (eventStream: Stream<D>) => Stream<E>,
+    op4: (eventStream: Stream<E>) => Stream<F>,
+    op5: (eventStream: Stream<F>) => Stream<G>,
+    op6: (eventStream: Stream<G>) => Stream<H>,
+    op7: (eventStream: Stream<H>) => Stream<I>
+): Stream<I>;
+export function compose(
+    eventStream: Stream<any>,
+    ...operations: ((eventStream: Stream<any>) => Stream<any>)[]
 ): Stream<any> {
     let operation = operations.shift();
     return operation === undefined ? eventStream : compose(operation(eventStream), ...operations);
@@ -147,14 +210,67 @@ export function throttle<T>(ms: number): (eventStream: Stream<T>) => Stream<T> {
     };
 }
 
-export function snapshot<T>(behavior: (() => T) | T): T {
+export function snapshot<T>(behavior: Behavior<T>): T {
     if (typeof behavior === "function") {
         return (behavior as () => T)();
     }
     return behavior;
 }
 
-export function liftN<T>(combine: (...args: any[]) => T, ...behaviors: any[]): () => T {
+export function liftN<A, T>(combine: (arg0: A) => T, b0: Behavior<A>): () => T;
+export function liftN<A, B, T>(combine: (arg0: A, arg1: B) => T, b0: Behavior<A>, b1: Behavior<B>): () => T;
+export function liftN<A, B, C, T>(
+    combine: (arg0: A, arg1: B, arg2: C) => T,
+    b0: Behavior<A>,
+    b1: Behavior<B>,
+    b2: Behavior<C>
+): () => T;
+export function liftN<A, B, C, D, T>(
+    combine: (arg0: A, arg1: B, arg2: C, arg3: D) => T,
+    b0: Behavior<A>,
+    b1: Behavior<B>,
+    b2: Behavior<C>,
+    b3: Behavior<D>
+): () => T;
+export function liftN<A, B, C, D, E, T>(
+    combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E) => T,
+    b0: Behavior<A>,
+    b1: Behavior<B>,
+    b2: Behavior<C>,
+    b3: Behavior<D>,
+    b4: Behavior<E>
+): () => T;
+export function liftN<A, B, C, D, E, F, T>(
+    combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E, arg5: F) => T,
+    b0: Behavior<A>,
+    b1: Behavior<B>,
+    b2: Behavior<C>,
+    b3: Behavior<D>,
+    b4: Behavior<E>,
+    b5: Behavior<F>
+): () => T;
+export function liftN<A, B, C, D, E, F, G, T>(
+    combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E, arg5: F, arg6: G) => T,
+    b0: Behavior<A>,
+    b1: Behavior<B>,
+    b2: Behavior<C>,
+    b3: Behavior<D>,
+    b4: Behavior<E>,
+    b5: Behavior<F>,
+    b6: Behavior<G>
+): () => T;
+export function liftN<A, B, C, D, E, F, G, H, T>(
+    combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E, arg5: F, arg6: G, arg7: H) => T,
+    b0: Behavior<A>,
+    b1: Behavior<B>,
+    b2: Behavior<C>,
+    b3: Behavior<D>,
+    b4: Behavior<E>,
+    b5: Behavior<F>,
+    b6: Behavior<G>,
+    b7: Behavior<H>
+): () => T;
+export function liftN<T>(combine: (...args: any[]) => T, ...behaviors: Behavior<any>[]): () => T {
     return function () {
         let values = behaviors.map(value => snapshot(value));
         return combine(...values);
