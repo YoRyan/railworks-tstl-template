@@ -60,7 +60,13 @@ export class FrpEntity {
             this.onInit();
             this.updateLoopFromCallback();
         };
-        Update = _ => this.updateLoop();
+        Update = _ => {
+            this.updateLoop();
+            if (!this.updatingEveryFrame) {
+                // EndUpdate() must be called from the Update() callback.
+                this.e.EndUpdate();
+            }
+        };
     }
 
     /**
@@ -80,8 +86,6 @@ export class FrpEntity {
     activateUpdatesEveryFrame(everyFrame: boolean) {
         if (!this.updatingEveryFrame && everyFrame) {
             this.e.BeginUpdate();
-        } else if (this.updatingEveryFrame && !everyFrame) {
-            this.e.EndUpdate();
         }
         this.updatingEveryFrame = everyFrame;
     }
