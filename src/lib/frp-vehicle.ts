@@ -90,9 +90,9 @@ export class FrpVehicle extends FrpEntity {
             this.activateUpdatesEveryFrame(true);
             const wait$ = frp.compose(
                 this.createUpdateStream(),
-                frp.map((time: number) => time > 0.5),
+                frp.map(time => time > 0.5),
                 fsm(false),
-                frp.filter((state: [from: boolean, to: boolean]) => !state[0] && state[1])
+                frp.filter(state => !state[0] && state[1])
             );
             wait$(_ => {
                 this.activateUpdatesEveryFrame(false);
@@ -140,7 +140,7 @@ export class FrpVehicle extends FrpEntity {
             this.createUpdateStream(),
             frp.map(_ => this.rv.GetControlValue(name, index)),
             frp.reject((value: number | undefined) => value === undefined)
-        );
+        ) as frp.Stream<number>;
     }
 
     /**
@@ -163,7 +163,7 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new event stream.
      */
     createAuthorityStream(): frp.Stream<VehicleAuthority> {
-        const direction$: frp.Stream<SensedDirection> = frp.compose(
+        const direction$ = frp.compose(
                 this.createUpdateStream(),
                 frp.map(_ => this.rv.GetSpeed()),
                 frp.fold<SensedDirection, number>((dir, speed) => {
@@ -177,7 +177,7 @@ export class FrpVehicle extends FrpEntity {
                 }, SensedDirection.None)
             ),
             authority = frp.liftN(
-                (direction: SensedDirection, isPlayer: boolean) =>
+                (direction: SensedDirection, isPlayer) =>
                     isPlayer
                         ? VehicleAuthority.IsPlayer
                         : {
