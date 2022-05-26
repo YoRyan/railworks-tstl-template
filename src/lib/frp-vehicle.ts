@@ -2,7 +2,8 @@
 
 import * as c from "./constants";
 import * as frp from "./frp";
-import { fsm, FrpEntity, FrpList } from "./frp-entity";
+import { FrpEntity, FrpList } from "./frp-entity";
+import { fsm, rejectUndefined } from "./frp-extra";
 import * as rw from "./railworks";
 
 const coupleSenseMessage: [message: number, argument: string] = [10001, ""];
@@ -139,8 +140,8 @@ export class FrpVehicle extends FrpEntity {
         return frp.compose(
             this.createUpdateStream(),
             frp.map(_ => this.rv.GetControlValue(name, index)),
-            frp.reject((value: number | undefined) => value === undefined)
-        ) as frp.Stream<number>;
+            rejectUndefined<number>()
+        );
     }
 
     /**

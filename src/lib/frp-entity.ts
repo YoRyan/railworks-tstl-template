@@ -4,33 +4,6 @@ import * as frp from "./frp";
 import * as rw from "./railworks";
 
 /**
- * Creates a state machine that records the last and current values of the event
- * stream.
- * @param initState The initial value of the state machine.
- */
-export function fsm<T>(initState: T): (eventStream: frp.Stream<T>) => frp.Stream<[from: T, to: T]> {
-    return frp.fold<[T, T], T>((accum, value) => [accum[1], value], [initState, initState]);
-}
-
-/**
- * Continously display the value of an event stream to aid in FRP debugging.
- * @param eventStream The eveent stream.
- */
-export function debugStream(eventStream: frp.Stream<any>) {
-    const frequency = 0.5;
-    frp.throttle(frequency * 1000)(eventStream)(value => {
-        rw.ScenarioManager.ShowInfoMessageExt(
-            "Event Stream",
-            `${value}`,
-            frequency,
-            rw.MessageBoxPosition.Centre,
-            rw.MessageBoxSize.Small,
-            false
-        );
-    });
-}
-
-/**
  * An entity is a world object that can request an Update() call. It manages an
  * update loop that runs on every Update() or event callback.
  */
