@@ -7,8 +7,7 @@
 import * as rw from "./railworks";
 
 export type Stream<T> = (next: (value: T) => void) => void;
-
-type Behavior<T> = (() => T) | T;
+export type Behavior<T> = (() => T) | T;
 
 const e = new rw.ScriptedEntity("");
 

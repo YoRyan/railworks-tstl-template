@@ -93,7 +93,7 @@ export class FrpVehicle extends FrpEntity {
                 this.createUpdateStream(),
                 frp.map(time => time > 0.5),
                 fsm(false),
-                frp.filter(state => !state[0] && state[1])
+                frp.filter(([from, to]) => !from && to)
             );
             wait$(_ => {
                 this.activateUpdatesEveryFrame(false);
@@ -141,6 +141,27 @@ export class FrpVehicle extends FrpEntity {
             this.createUpdateStream(),
             frp.map(_ => this.rv.GetControlValue(name, index)),
             rejectUndefined<number>()
+        );
+    }
+
+    /**
+     * Create an event stream that fires for the OnControlValueChange()
+     * callback for a particular control.
+     * @param name The name of the control.
+     * @param index The index of the control, usually 0.
+     * @returns The new stream of values.
+     */
+    createOnCvChangeStreamFor(name: string, index: number): frp.Stream<number> {
+        return frp.compose(
+            this.createOnCvChangeStream(),
+            frp.filter((cvc: ControlValueChange) => {
+                const [cvcName, cvcIndex, _] = cvc;
+                return cvcName === name && cvcIndex === index;
+            }),
+            frp.map(cvc => {
+                const [, , cvcValue] = cvc;
+                return cvcValue;
+            })
         );
     }
 
