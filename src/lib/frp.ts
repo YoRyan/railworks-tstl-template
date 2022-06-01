@@ -176,7 +176,7 @@ export function compose(
 /**
  * Returns a behaviour. Call the behaviour for the last value of the event.
  */
-export function stepper<T>(eventStream: Stream<T>, initial: T): () => T {
+export function stepper<T>(eventStream: Stream<T>, initial: T): Behavior<T> {
     let valueAtLastStep = initial;
 
     eventStream(function nextStep(value) {
@@ -216,21 +216,21 @@ export function snapshot<T>(behavior: Behavior<T>): T {
     return behavior;
 }
 
-export function liftN<A, T>(combine: (arg0: A) => T, b0: Behavior<A>): () => T;
-export function liftN<A, B, T>(combine: (arg0: A, arg1: B) => T, b0: Behavior<A>, b1: Behavior<B>): () => T;
+export function liftN<A, T>(combine: (arg0: A) => T, b0: Behavior<A>): Behavior<T>;
+export function liftN<A, B, T>(combine: (arg0: A, arg1: B) => T, b0: Behavior<A>, b1: Behavior<B>): Behavior<T>;
 export function liftN<A, B, C, T>(
     combine: (arg0: A, arg1: B, arg2: C) => T,
     b0: Behavior<A>,
     b1: Behavior<B>,
     b2: Behavior<C>
-): () => T;
+): Behavior<T>;
 export function liftN<A, B, C, D, T>(
     combine: (arg0: A, arg1: B, arg2: C, arg3: D) => T,
     b0: Behavior<A>,
     b1: Behavior<B>,
     b2: Behavior<C>,
     b3: Behavior<D>
-): () => T;
+): Behavior<T>;
 export function liftN<A, B, C, D, E, T>(
     combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E) => T,
     b0: Behavior<A>,
@@ -238,7 +238,7 @@ export function liftN<A, B, C, D, E, T>(
     b2: Behavior<C>,
     b3: Behavior<D>,
     b4: Behavior<E>
-): () => T;
+): Behavior<T>;
 export function liftN<A, B, C, D, E, F, T>(
     combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E, arg5: F) => T,
     b0: Behavior<A>,
@@ -247,7 +247,7 @@ export function liftN<A, B, C, D, E, F, T>(
     b3: Behavior<D>,
     b4: Behavior<E>,
     b5: Behavior<F>
-): () => T;
+): Behavior<T>;
 export function liftN<A, B, C, D, E, F, G, T>(
     combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E, arg5: F, arg6: G) => T,
     b0: Behavior<A>,
@@ -257,7 +257,7 @@ export function liftN<A, B, C, D, E, F, G, T>(
     b4: Behavior<E>,
     b5: Behavior<F>,
     b6: Behavior<G>
-): () => T;
+): Behavior<T>;
 export function liftN<A, B, C, D, E, F, G, H, T>(
     combine: (arg0: A, arg1: B, arg2: C, arg3: D, arg4: E, arg5: F, arg6: G, arg7: H) => T,
     b0: Behavior<A>,
@@ -268,8 +268,8 @@ export function liftN<A, B, C, D, E, F, G, H, T>(
     b5: Behavior<F>,
     b6: Behavior<G>,
     b7: Behavior<H>
-): () => T;
-export function liftN<T>(combine: (...args: any[]) => T, ...behaviors: Behavior<any>[]): () => T {
+): Behavior<T>;
+export function liftN<T>(combine: (...args: any[]) => T, ...behaviors: Behavior<any>[]): Behavior<T> {
     return function () {
         let values = behaviors.map(value => snapshot(value));
         return combine(...values);
