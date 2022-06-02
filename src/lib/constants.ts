@@ -9,3 +9,11 @@ export const mph = {
 export const mps = {
     toMph: 2.23694,
 };
+
+export const m = {
+    toFt: 3.28084,
+};
+
+export const ft = {
+    toM: 0.3048,
+};
