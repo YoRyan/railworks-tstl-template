@@ -225,7 +225,7 @@ export class FrpVehicle extends FrpEntity {
             this.updateLoopFromCallback();
         };
         OnCameraEnter = (cabEnd, carriageCam) => {
-            let vc: VehicleCamera;
+            let vc;
             if (carriageCam === rw.CameraEnterView.Cab) {
                 vc = cabEnd === rw.CameraEnterCabEnd.Rear ? VehicleCamera.RearCab : VehicleCamera.FrontCab;
             } else {
