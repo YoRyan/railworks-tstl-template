@@ -65,6 +65,16 @@ export class FrpEntity {
     }
 
     /**
+     * Create an event stream that provides the value produced by the behavior
+     * on every iteration of the update loop.
+     * @param b The behavior.
+     * @returns The new event stream.
+     */
+    createUpdateStreamForBehavior<T>(b: frp.Behavior<T>) {
+        return frp.map((_: number) => frp.snapshot(b))(this.createUpdateStream());
+    }
+
+    /**
      * Transform any event stream into a stream that produces false, unless the
      * original stream produces an event, in which case it produces true for a
      * specified amount of time. Can be used to drive one-shot special effects

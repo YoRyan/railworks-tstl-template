@@ -137,11 +137,8 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new stream of numbers.
      */
     createGetCvStream(name: string, index: number): frp.Stream<number> {
-        return frp.compose(
-            this.createUpdateStream(),
-            frp.map(_ => this.rv.GetControlValue(name, index)),
-            rejectUndefined<number>()
-        );
+        const b = () => this.rv.GetControlValue(name, index);
+        return rejectUndefined<number>()(this.createUpdateStreamForBehavior(b));
     }
 
     /**
@@ -185,12 +182,12 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new event stream.
      */
     createCouplingsStream(): frp.Stream<VehicleCouplings> {
-        return frp.map(
-            (_): VehicleCouplings => [
+        return this.createUpdateStreamForBehavior(
+            (): VehicleCouplings => [
                 this.rv.SendConsistMessage(...coupleSenseMessage, rw.ConsistDirection.Forward),
                 this.rv.SendConsistMessage(...coupleSenseMessage, rw.ConsistDirection.Backward),
             ]
-        )(this.createUpdateStream());
+        );
     }
 
     /**
@@ -200,8 +197,7 @@ export class FrpVehicle extends FrpEntity {
      */
     createAuthorityStream(): frp.Stream<VehicleAuthority> {
         const direction$ = frp.compose(
-                this.createUpdateStream(),
-                frp.map(_ => this.rv.GetSpeed()),
+                this.createUpdateStreamForBehavior(() => this.rv.GetSpeed()),
                 frp.fold<SensedDirection, number>((dir, speed) => {
                     if (speed > c.stopSpeed) {
                         return SensedDirection.Forward;
@@ -224,7 +220,7 @@ export class FrpVehicle extends FrpEntity {
                 frp.stepper(direction$, SensedDirection.None),
                 () => this.rv.GetIsPlayer()
             );
-        return frp.map(_ => frp.snapshot(authority))(this.createUpdateStream());
+        return this.createUpdateStreamForBehavior(authority);
     }
 
     setup() {
