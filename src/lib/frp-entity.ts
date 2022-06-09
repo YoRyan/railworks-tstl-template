@@ -1,6 +1,7 @@
 /** @noSelfInFile */
 
 import * as frp from "./frp";
+import { fsm } from "./frp-extra";
 import * as rw from "./railworks";
 
 /**
@@ -61,6 +62,37 @@ export class FrpEntity {
             this.e.BeginUpdate();
         }
         this.updatingEveryFrame = everyFrame;
+    }
+
+    /**
+     * Transform any event stream into a stream that produces false, unless the
+     * original stream produces an event, in which case it produces true for a
+     * specified amount of time. Can be used to drive one-shot special effects
+     * like beeps, tones, messages, etc.
+     * @param durationS The length of the post-event timer.
+     * @returns A curried function that will produce the new event stream.
+     */
+    createEventStreamTimer(durationS: number = 1): (eventStream: frp.Stream<any>) => frp.Stream<boolean> {
+        return eventStream => {
+            const update$ = frp.compose(
+                this.createUpdateStream(),
+                fsm<number>(0),
+                frp.map(([from, to]) => to - from)
+            );
+            return frp.compose(
+                eventStream,
+                frp.map((_: any): undefined => undefined),
+                frp.merge<number, number | undefined>(update$),
+                frp.fold<number, number | undefined>((accum, value) => {
+                    if (typeof value !== "number") {
+                        return durationS;
+                    } else {
+                        return Math.max(accum - value, 0);
+                    }
+                }, 0),
+                frp.map(t => t > 0)
+            );
+        };
     }
 
     /**
