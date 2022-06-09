@@ -23,6 +23,15 @@ export class FrpEngine extends FrpVehicle {
         return this.signalMessageList.createStream();
     }
 
+    /**
+     * Pass through the events in the event stream only when the player is in
+     * control of this engine.
+     * @returns The new event stream.
+     */
+    filterPlayerEngine<T>(): (eventStream: frp.Stream<T>) => frp.Stream<T> {
+        return frp.filter((_: T) => this.eng.GetIsEngineWithKey());
+    }
+
     setup() {
         super.setup();
 

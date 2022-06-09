@@ -166,6 +166,20 @@ export class FrpVehicle extends FrpEntity {
     }
 
     /**
+     * Create a continuously updating stream of controlvalues that also fires
+     * for the OnControlValueChange() callback. This is the closest a script
+     * can get to intercepting every possible change of the controlvalue.
+     * @param name The name of the control.
+     * @param index The index of the control, usually 0.
+     * @returns The new stream of values.
+     */
+    createGetCvAndOnCvChangeStreamFor(name: string, index: number): frp.Stream<number> {
+        const onUpdate$ = this.createGetCvStream(name, index),
+            onCvChange$ = this.createOnCvChangeStreamFor(name, index);
+        return frp.merge<number, number>(onCvChange$)(onUpdate$);
+    }
+
+    /**
      * Create an event stream that communicates the current status of the
      * vehicle's front and rear couplers.
      * @returns The new event stream.
