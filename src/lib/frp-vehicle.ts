@@ -151,7 +151,7 @@ export class FrpVehicle extends FrpEntity {
     createOnCvChangeStreamFor(name: string, index: number): frp.Stream<number> {
         return frp.compose(
             this.createOnCvChangeStream(),
-            frp.filter(([name, index]) => name === name && index === index),
+            frp.filter(([cvcName, cvcIndex]) => cvcName === name && cvcIndex === index),
             frp.map(([, , value]) => value)
         );
     }
