@@ -104,10 +104,6 @@ export function merge<A, B>(eventStreamA: Stream<A>): (eventStreamB: Stream<B>) 
  * Takes an eventStream, performs a series of operations on it and returns
  * a modified stream. All FRP operations are curried by default.
  */
-export function compose(
-    eventStream: Stream<any>,
-    ...operations: ((eventStream: Stream<any>) => Stream<any>)[]
-): Stream<any>; // Need to repeat this declaration here so that TypeScript considers operations a rest argument.
 export function compose<A, B>(eventStream: Stream<A>, op0: (eventStream: Stream<A>) => Stream<B>): Stream<B>;
 export function compose<A, B, C>(
     eventStream: Stream<A>,
@@ -170,6 +166,7 @@ export function compose(
     ...operations: ((eventStream: Stream<any>) => Stream<any>)[]
 ): Stream<any> {
     let operation = operations.shift();
+    // @ts-ignore
     return operation === undefined ? eventStream : compose(operation(eventStream), ...operations);
 }
 
