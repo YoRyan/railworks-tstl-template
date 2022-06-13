@@ -151,14 +151,8 @@ export class FrpVehicle extends FrpEntity {
     createOnCvChangeStreamFor(name: string, index: number): frp.Stream<number> {
         return frp.compose(
             this.createOnCvChangeStream(),
-            frp.filter((cvc: ControlValueChange) => {
-                const [cvcName, cvcIndex, _] = cvc;
-                return cvcName === name && cvcIndex === index;
-            }),
-            frp.map(cvc => {
-                const [, , cvcValue] = cvc;
-                return cvcValue;
-            })
+            frp.filter(([name, index]) => name === name && index === index),
+            frp.map(([, , value]) => value)
         );
     }
 
@@ -171,8 +165,8 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new stream of values.
      */
     createGetCvAndOnCvChangeStreamFor(name: string, index: number): frp.Stream<number> {
-        const onUpdate$ = this.createGetCvStream(name, index),
-            onCvChange$ = this.createOnCvChangeStreamFor(name, index);
+        const onUpdate$ = this.createGetCvStream(name, index);
+        const onCvChange$ = this.createOnCvChangeStreamFor(name, index);
         return frp.merge<number, number>(onCvChange$)(onUpdate$);
     }
 
@@ -197,29 +191,29 @@ export class FrpVehicle extends FrpEntity {
      */
     createAuthorityStream(): frp.Stream<VehicleAuthority> {
         const direction$ = frp.compose(
-                this.createUpdateStreamForBehavior(() => this.rv.GetSpeed()),
-                frp.fold<SensedDirection, number>((dir, speed) => {
-                    if (speed > c.stopSpeed) {
-                        return SensedDirection.Forward;
-                    } else if (speed < -c.stopSpeed) {
-                        return SensedDirection.Backward;
-                    } else {
-                        return dir;
-                    }
-                }, SensedDirection.None)
-            ),
-            authority = frp.liftN(
-                (direction: SensedDirection, isPlayer) =>
-                    isPlayer
-                        ? VehicleAuthority.IsPlayer
-                        : {
-                              [SensedDirection.Forward]: VehicleAuthority.IsAiMovingForward,
-                              [SensedDirection.None]: VehicleAuthority.IsAiParked,
-                              [SensedDirection.Backward]: VehicleAuthority.IsAiMovingBackward,
-                          }[direction],
-                frp.stepper(direction$, SensedDirection.None),
-                () => this.rv.GetIsPlayer()
-            );
+            this.createUpdateStreamForBehavior(() => this.rv.GetSpeed()),
+            frp.fold((dir, speed) => {
+                if (speed > c.stopSpeed) {
+                    return SensedDirection.Forward;
+                } else if (speed < -c.stopSpeed) {
+                    return SensedDirection.Backward;
+                } else {
+                    return dir;
+                }
+            }, SensedDirection.None)
+        );
+        const authority = frp.liftN(
+            (direction, isPlayer) =>
+                isPlayer
+                    ? VehicleAuthority.IsPlayer
+                    : {
+                          [SensedDirection.Forward]: VehicleAuthority.IsAiMovingForward,
+                          [SensedDirection.None]: VehicleAuthority.IsAiParked,
+                          [SensedDirection.Backward]: VehicleAuthority.IsAiMovingBackward,
+                      }[direction],
+            frp.stepper(direction$, SensedDirection.None),
+            () => this.rv.GetIsPlayer()
+        );
         return this.createUpdateStreamForBehavior(authority);
     }
 

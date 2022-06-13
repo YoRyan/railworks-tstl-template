@@ -1,6 +1,5 @@
 /** @noSelfInFile */
 
-import * as c from "./constants";
 import * as frp from "./frp";
 import { FrpList } from "./frp-entity";
 import { FrpVehicle } from "./frp-vehicle";

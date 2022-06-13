@@ -86,14 +86,14 @@ export class FrpEntity {
         return eventStream => {
             const update$ = frp.compose(
                 this.createUpdateStream(),
-                fsm<number>(0),
+                fsm(0),
                 frp.map(([from, to]) => to - from)
             );
             return frp.compose(
                 eventStream,
-                frp.map((_: any): undefined => undefined),
-                frp.merge<number, number | undefined>(update$),
-                frp.fold<number, number | undefined>((accum, value) => {
+                frp.map(_ => undefined),
+                frp.merge(update$),
+                frp.fold((accum, value) => {
                     if (typeof value !== "number") {
                         return durationS;
                     } else {
