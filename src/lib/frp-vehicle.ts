@@ -120,6 +120,20 @@ export class FrpVehicle extends FrpEntity {
     }
 
     /**
+     * Create an event stream that fires for the OnConsistMessage() callback
+     * for a particular type of message.
+     * @param id The message ID to filter for.
+     * @returns The new event stream.
+     */
+    createOnConsistMessageStreamFor(id: number): frp.Stream<[content: string, direction: rw.ConsistDirection]> {
+        return frp.compose(
+            this.createOnConsistMessageStream(),
+            frp.filter(([msgId]) => msgId === id),
+            frp.map(([, content, dir]) => [content, dir])
+        );
+    }
+
+    /**
      * Create an event stream that tracks the current camera view through the
      * OnCameraEnter() and OnCameraLeave() callbacks.
      * @returns The new event stream.
