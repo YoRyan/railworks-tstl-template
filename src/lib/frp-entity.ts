@@ -65,6 +65,20 @@ export class FrpEntity {
     }
 
     /**
+     * Create an event stream that provides the time elapsed since the last
+     * iteration of the update loop.
+     * @returns The new event stream.
+     */
+    createUpdateDeltaStream(): frp.Stream<number> {
+        return frp.compose(
+            this.createUpdateStream(),
+            fsm<number | undefined>(undefined),
+            frp.filter(([from]) => from !== undefined),
+            frp.map(([from, to]) => (to as number) - (from as number))
+        );
+    }
+
+    /**
      * Create an event stream that provides the value produced by the behavior
      * on every iteration of the update loop.
      * @param b The behavior.
@@ -84,15 +98,10 @@ export class FrpEntity {
      */
     createEventStreamTimer(durationS: number = 1): (eventStream: frp.Stream<any>) => frp.Stream<boolean> {
         return eventStream => {
-            const update$ = frp.compose(
-                this.createUpdateStream(),
-                fsm(0),
-                frp.map(([from, to]) => to - from)
-            );
             return frp.compose(
                 eventStream,
                 frp.map(_ => undefined),
-                frp.merge(update$),
+                frp.merge(this.createUpdateDeltaStream()),
                 frp.fold((accum, value) => {
                     if (typeof value !== "number") {
                         return durationS;
