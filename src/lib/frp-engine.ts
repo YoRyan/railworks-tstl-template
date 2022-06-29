@@ -10,6 +10,10 @@ export class FrpEngine extends FrpVehicle {
      * Convenient acces to the methods for an engine.
      */
     public eng = new rw.Engine("");
+    /**
+     * A behavior that returns true if this is the player-controlled engine.
+     */
+    public isEngineWithKey: frp.Behavior<boolean> = () => this.eng.GetIsEngineWithKey();
 
     private signalMessageList = new FrpList<string>();
 
@@ -19,16 +23,7 @@ export class FrpEngine extends FrpVehicle {
      * @returns The new event stream.
      */
     createOnCustomSignalMessageStream(): frp.Stream<string> {
-        return this.signalMessageList.createStream();
-    }
-
-    /**
-     * Pass through the events in the event stream only when the player is in
-     * control of this engine.
-     * @returns The new event stream.
-     */
-    filterPlayerEngine<T>(): (eventStream: frp.Stream<T>) => frp.Stream<T> {
-        return frp.filter((_: T) => this.eng.GetIsEngineWithKey());
+        return this.signalMessageList.createStream(this.isEngineWithKey);
     }
 
     setup() {

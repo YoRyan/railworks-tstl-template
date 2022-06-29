@@ -73,6 +73,11 @@ export class FrpVehicle extends FrpEntity {
      * Convenient access to the methods for a rail vehicle.
      */
     public rv = new rw.RailVehicle("");
+    /**
+     * A behavior that returns true if this vehicle is part of the player
+     * train.
+     */
+    public isPlayer: frp.Behavior<boolean> = () => this.rv.GetIsPlayer();
 
     private onCvChangeList = new FrpList<ControlValueChange>();
     private consistMessageList = new FrpList<ConsistMessage>();
@@ -88,14 +93,15 @@ export class FrpVehicle extends FrpEntity {
         // Begin updates, wait 0.5 seconds for the controls to settle, then fire
         // our callback.
         super(() => {
+            let done = false;
             this.activateUpdatesEveryFrame(true);
             const wait$ = frp.compose(
-                this.createUpdateStream(),
-                frp.map(time => time > 0.5),
-                fsm(false),
-                frp.filter(([from, to]) => !from && to)
+                this.createUpdateStream(() => !done),
+                fsm(0),
+                frp.filter(([from, to]) => from < 0.5 && to >= 0.5)
             );
             wait$(_ => {
+                done = true;
                 this.activateUpdatesEveryFrame(false);
                 onInitAndSettled();
             });
@@ -108,7 +114,7 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new event stream.
      */
     createOnCvChangeStream(): frp.Stream<ControlValueChange> {
-        return this.onCvChangeList.createStream();
+        return this.onCvChangeList.createStream(this.isPlayer);
     }
 
     /**
@@ -116,7 +122,7 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new event stream.
      */
     createOnConsistMessageStream(): frp.Stream<ConsistMessage> {
-        return this.consistMessageList.createStream();
+        return this.consistMessageList.createStream(this.isPlayer);
     }
 
     /**
@@ -139,7 +145,7 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new event stream.
      */
     createCameraStream(): frp.Stream<VehicleCamera> {
-        return this.vehicleCameraList.createStream();
+        return this.vehicleCameraList.createStream(this.isPlayer);
     }
 
     /**
@@ -151,8 +157,10 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new stream of numbers.
      */
     createGetCvStream(name: string, index: number): frp.Stream<number> {
-        const b = () => this.rv.GetControlValue(name, index);
-        return rejectUndefined<number>()(this.createUpdateStreamForBehavior(b));
+        return frp.compose(
+            this.createUpdateStreamForBehavior(() => this.rv.GetControlValue(name, index), this.isPlayer),
+            rejectUndefined()
+        );
     }
 
     /**
@@ -204,7 +212,7 @@ export class FrpVehicle extends FrpEntity {
      * @returns The new event stream.
      */
     createAuthorityStream(): frp.Stream<VehicleAuthority> {
-        const direction$ = frp.compose(
+        return frp.compose(
             this.createUpdateStreamForBehavior(() => this.rv.GetSpeed()),
             frp.fold((dir, speed) => {
                 if (speed > c.stopSpeed) {
@@ -214,21 +222,17 @@ export class FrpVehicle extends FrpEntity {
                 } else {
                     return dir;
                 }
-            }, SensedDirection.None)
-        );
-        const authority = frp.liftN(
-            (direction, isPlayer) =>
-                isPlayer
+            }, SensedDirection.None),
+            frp.map(direction =>
+                frp.snapshot(this.isPlayer)
                     ? VehicleAuthority.IsPlayer
                     : {
                           [SensedDirection.Forward]: VehicleAuthority.IsAiMovingForward,
                           [SensedDirection.None]: VehicleAuthority.IsAiParked,
                           [SensedDirection.Backward]: VehicleAuthority.IsAiMovingBackward,
-                      }[direction],
-            frp.stepper(direction$, SensedDirection.None),
-            () => this.rv.GetIsPlayer()
+                      }[direction]
+            )
         );
-        return this.createUpdateStreamForBehavior(authority);
     }
 
     setup() {

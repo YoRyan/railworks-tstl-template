@@ -37,27 +37,3 @@ export function rejectUndefined<T>(): (eventStream: frp.Stream<T | undefined>) =
         eventStream: frp.Stream<T | undefined>
     ) => frp.Stream<T>;
 }
-
-/**
- * Like fold, but accepts a behavior that can reset the accumulator to the
- * initial state.
- */
-export function foldWithResetBehavior<TAccum, TValue>(
-    step: (accumulated: TAccum, value: TValue) => TAccum,
-    initial: TAccum,
-    reset: frp.Behavior<boolean>
-): (eventStream: frp.Stream<TValue>) => frp.Stream<TAccum> {
-    return function (eventStream) {
-        return function (next) {
-            let accumulated = initial;
-            eventStream(function (value) {
-                if (frp.snapshot(reset)) {
-                    accumulated = initial;
-                } else {
-                    accumulated = step(accumulated, value);
-                }
-                next(accumulated);
-            });
-        };
-    };
-}

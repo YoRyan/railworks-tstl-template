@@ -14,8 +14,16 @@ export class FrpEntity {
      */
     public e = new rw.ScriptedEntity("");
 
+    /**
+     * A behavior that always returns true--the default for creating update
+     * streams.
+     */
+    protected always: frp.Behavior<boolean> = () => true;
+
     private onInit: (this: void) => void;
-    private updateList = new FrpList<number>();
+    private updateTimeList = new FrpList<number>();
+    private updateDeltaList = new FrpList<number>();
+    private lastTimeS: number | undefined = undefined;
     private updatingEveryFrame = false;
 
     /**
@@ -46,10 +54,12 @@ export class FrpEntity {
     /**
      * Create an event stream that provides the current simulation time on every
      * iteration of the update loop.
+     * @param update The stream will continue to produce events as long as the
+     * provided behavior is true.
      * @returns The new event stream.
      */
-    createUpdateStream(): frp.Stream<number> {
-        return this.updateList.createStream();
+    createUpdateStream(update = this.always): frp.Stream<number> {
+        return this.updateTimeList.createStream(update);
     }
 
     /**
@@ -67,25 +77,27 @@ export class FrpEntity {
     /**
      * Create an event stream that provides the time elapsed since the last
      * iteration of the update loop.
+     * @param update The stream will continue to produce events as long as the
+     * provided behavior is true.
      * @returns The new event stream.
      */
-    createUpdateDeltaStream(): frp.Stream<number> {
-        return frp.compose(
-            this.createUpdateStream(),
-            fsm<number | undefined>(undefined),
-            frp.filter(([from]) => from !== undefined),
-            frp.map(([from, to]) => (to as number) - (from as number))
-        );
+    createUpdateDeltaStream(update = this.always): frp.Stream<number> {
+        return this.updateDeltaList.createStream(update);
     }
 
     /**
      * Create an event stream that provides the value produced by the behavior
      * on every iteration of the update loop.
-     * @param b The behavior.
+     * @param b The behavior to create events with.
+     * @param update The stream will continue to produce events as long as the
+     * provided behavior is true.
      * @returns The new event stream.
      */
-    createUpdateStreamForBehavior<T>(b: frp.Behavior<T>) {
-        return frp.map((_: number) => frp.snapshot(b))(this.createUpdateStream());
+    createUpdateStreamForBehavior<T>(b: frp.Behavior<T>, update = this.always) {
+        return frp.compose(
+            this.createUpdateStream(update),
+            frp.map(_ => frp.snapshot(b))
+        );
     }
 
     /**
@@ -93,15 +105,20 @@ export class FrpEntity {
      * original stream produces an event, in which case it produces true for a
      * specified amount of time. Can be used to drive one-shot special effects
      * like beeps, tones, messages, etc.
+     * @param update Continue to produce events as long as the provided
+     * behavior is true.
      * @param durationS The length of the post-event timer.
      * @returns A curried function that will produce the new event stream.
      */
-    createEventStreamTimer(durationS: number = 1): (eventStream: frp.Stream<any>) => frp.Stream<boolean> {
+    createEventStreamTimer(
+        update = this.always,
+        durationS: number = 1
+    ): (eventStream: frp.Stream<any>) => frp.Stream<boolean> {
         return eventStream => {
             return frp.compose(
                 eventStream,
                 frp.map(_ => undefined),
-                frp.merge(this.createUpdateDeltaStream()),
+                frp.merge(this.createUpdateDeltaStream(update)),
                 frp.fold((accum, value) => {
                     if (typeof value !== "number") {
                         return durationS;
@@ -119,7 +136,13 @@ export class FrpEntity {
      */
     protected updateLoop() {
         const time = this.e.GetSimulationTime();
-        this.updateList.call(time);
+        this.updateTimeList.call(time);
+
+        if (this.lastTimeS !== undefined) {
+            const dt = time - this.lastTimeS;
+            this.updateDeltaList.call(dt);
+        }
+        this.lastTimeS = time;
     }
 
     /**
@@ -134,17 +157,25 @@ export class FrpEntity {
 }
 
 /**
- * A list of callbacks that proxies access to a single event stream source.
+ * A list of callbacks that proxies access to a single event stream source. To
+ * improve performance, callbacks are indexed by a guard behavior.
  */
 export class FrpList<T> {
-    private nexts: ((arg0: T) => void)[] = [];
+    private nextGuards = new Map<frp.Behavior<boolean>, ((arg0: T) => void)[]>();
 
     /**
      * Create a new event stream and register its callback to this list.
+     * @param guard The event stream will only produce events while this
+     * behavior is true.
      */
-    createStream(): frp.Stream<T> {
+    createStream(guard: frp.Behavior<boolean>): frp.Stream<T> {
         return next => {
-            this.nexts.push(next);
+            const nexts = this.nextGuards.get(guard);
+            if (nexts === undefined) {
+                this.nextGuards.set(guard, [next]);
+            } else {
+                nexts.push(next);
+            }
         };
     }
 
@@ -153,8 +184,12 @@ export class FrpList<T> {
      * @param value The value to run the callbacks with.
      */
     call(value: T) {
-        for (const next of this.nexts) {
-            next(value);
+        for (const [guard, nexts] of this.nextGuards) {
+            if (frp.snapshot(guard)) {
+                for (const next of nexts) {
+                    next(value);
+                }
+            }
         }
     }
 }
