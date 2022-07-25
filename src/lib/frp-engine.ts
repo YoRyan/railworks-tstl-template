@@ -1,8 +1,8 @@
 /** @noSelfInFile */
 
 import * as frp from "./frp";
-import { FrpList } from "./frp-entity";
-import { FrpVehicle } from "./frp-vehicle";
+import { FrpSource } from "./frp-entity";
+import { FrpVehicle, PlayerUpdate } from "./frp-vehicle";
 import * as rw from "./railworks";
 
 export class FrpEngine extends FrpVehicle {
@@ -10,28 +10,41 @@ export class FrpEngine extends FrpVehicle {
      * Convenient acces to the methods for an engine.
      */
     public eng = new rw.Engine("");
-    /**
-     * A behavior that returns true if this is the player-controlled engine.
-     */
-    public isEngineWithKey: frp.Behavior<boolean> = () => this.eng.GetIsEngineWithKey();
 
-    private signalMessageList = new FrpList<string>();
+    private playerWithKeyUpdateSource = new FrpSource<PlayerUpdate>();
+    private playerWithoutKeyUpdateSource = new FrpSource<PlayerUpdate>();
+    private signalMessageSource = new FrpSource<string>();
 
-    /**
-     * Create an event stream that fires for the OnCustomSignalMessage()
-     * callback.
-     * @returns The new event stream.
-     */
-    createOnCustomSignalMessageStream(): frp.Stream<string> {
-        return this.signalMessageList.createStream(this.isEngineWithKey);
+    constructor(onInit: () => void) {
+        super(onInit);
+
+        const playerUpdate$ = this.createPlayerUpdateStream();
+        playerUpdate$(pu => {
+            if (this.eng.GetIsEngineWithKey()) {
+                this.playerWithKeyUpdateSource.call(pu);
+            } else {
+                this.playerWithoutKeyUpdateSource.call(pu);
+            }
+        });
+    }
+
+    createPlayerWithKeyUpdateStream() {
+        return this.playerWithKeyUpdateSource.createStream();
+    }
+
+    createPlayerWithoutKeyUpdateStream() {
+        return this.playerWithoutKeyUpdateSource.createStream();
+    }
+
+    createOnSignalMessageStream() {
+        return this.signalMessageSource.createStream();
     }
 
     setup() {
         super.setup();
 
         OnCustomSignalMessage = msg => {
-            this.signalMessageList.call(msg);
-            this.updateLoopFromCallback();
+            this.signalMessageSource.call(msg);
         };
     }
 }

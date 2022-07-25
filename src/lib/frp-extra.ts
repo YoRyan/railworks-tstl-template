@@ -37,3 +37,10 @@ export function rejectUndefined<T>(): (eventStream: frp.Stream<T | undefined>) =
         eventStream: frp.Stream<T | undefined>
     ) => frp.Stream<T>;
 }
+
+/**
+ * Maps a behavior onto all events of a stream.
+ */
+export function mapBehavior<T>(behavior: frp.Behavior<T>): (eventStream: frp.Stream<any>) => frp.Stream<T> {
+    return frp.map(_ => frp.snapshot(behavior));
+}
