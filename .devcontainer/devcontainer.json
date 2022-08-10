@@ -1,8 +1,7 @@
 {
     "name": "TypeScriptToLua",
-    "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:14",
-    "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
+    "build": {
+        "dockerfile": "Dockerfile"
     },
     "extensions": [
         "typescript-to-lua.vscode-typescript-to-lua",

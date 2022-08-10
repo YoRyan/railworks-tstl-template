@@ -1,47 +1,51 @@
-const fsPromises = require("fs/promises"),
-    gulp = require("gulp"),
-    filter = require("gulp-filter"),
-    flatmap = require("gulp-flatmap"),
-    intermediate = require("gulp-intermediate"),
-    rename = require("gulp-rename"),
-    path = require("path"),
-    ts = require("typescript"),
-    tstl = require("typescript-to-lua");
+import { writeFile } from "fs/promises";
+import gulp from "gulp";
+const { dest, src } = gulp;
+import { stream } from "gulp-execa";
+import filter from "gulp-filter";
+import flatmap from "gulp-flatmap";
+import intermediate from "gulp-intermediate";
+import rename from "gulp-rename";
+import path from "path";
+import ts from "typescript";
+import tstl from "typescript-to-lua";
 
-exports.default = exports.tstl = function (cb) {
-    return gulp
-        .src("src/mod/**/*.ts", { base: "src" })
-        .pipe(
-            flatmap(function (stream, file) {
-                return stream
-                    .pipe(gulp.src(["src/@types/**/*", "src/lib/**/*.ts"], { base: "src" }))
-                    .pipe(
-                        gulp.src(["node_modules/lua-types/**/*", "node_modules/typescript-to-lua/**/*"], { base: "." })
-                    )
-                    .pipe(
-                        intermediate({}, async function (tempDir, cb) {
-                            await compileLua(tempDir, file.relative);
-                            cb();
-                        })
-                    )
-                    .pipe(filter(["mod/**/*.lua"]));
-            })
-        )
-        .pipe(
-            rename(function (path) {
-                path.dirname = path.dirname.replace(/^mod\//, "");
-            })
-        )
-        .pipe(gulp.dest("dist"));
-};
+export async function scripts() {
+    return (
+        src("src/mod/**/*.ts", { base: "src" })
+            .pipe(
+                flatmap(function (stream, file) {
+                    return stream
+                        .pipe(src(["src/@types/**/*", "src/lib/**/*.ts"], { base: "src" }))
+                        .pipe(
+                            src(["node_modules/lua-types/**/*", "node_modules/typescript-to-lua/**/*"], { base: "." })
+                        )
+                        .pipe(
+                            intermediate({}, async function (tempDir, cb) {
+                                await transpileTypeScriptToLua(tempDir, file.relative);
+                                cb();
+                            })
+                        )
+                        .pipe(filter(["mod/**/*.lua"]));
+                })
+            )
+            // Need to pipe through cat because node pipes can't be referenced with
+            // named file descriptors; see https://stackoverflow.com/a/72906798
+            .pipe(stream(({ path }) => `luac -o /dev/stdout ${path} | cat`, { shell: true }))
+            .pipe(rename(path => (path.extname = ".out")))
+            .pipe(rename(path => (path.dirname = path.dirname.replace(/^mod\//, ""))))
+            .pipe(dest("dist"))
+    );
+}
 
-async function compileLua(tempDir, luaPath) {
+export default async function () {
+    return await scripts();
+}
+
+async function transpileTypeScriptToLua(tempDir, luaPath) {
     // We need the root tsconfig.json node to set the value of "include".
     const tsconfig = path.join(tempDir, "tsconfig.json");
-    await fsPromises.writeFile(
-        tsconfig,
-        `{ "include": ["${path.join(tempDir, "@types")}", "${path.join(tempDir, "mod")}"] }`
-    );
+    await writeFile(tsconfig, `{ "include": ["${path.join(tempDir, "@types")}", "${path.join(tempDir, "mod")}"] }`);
 
     const result = tstl.transpileProject(tsconfig, {
         target: ts.ScriptTarget.ESNext,

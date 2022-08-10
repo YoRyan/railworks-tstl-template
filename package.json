@@ -1,6 +1,8 @@
 {
+  "type": "module",
   "dependencies": {
     "gulp": "^4.0.2",
+    "gulp-execa": "^4.1.0",
     "gulp-filter": "^7.0.0",
     "gulp-flatmap": "^1.0.2",
     "gulp-intermediate": "^5.0.0",
