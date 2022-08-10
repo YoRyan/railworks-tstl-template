@@ -9,5 +9,6 @@
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode"
     ],
-    "postCreateCommand": "npm ci"
+    "postCreateCommand": "npm ci",
+    "remoteUser": "node"
 }
