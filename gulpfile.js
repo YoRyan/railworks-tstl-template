@@ -15,7 +15,7 @@ export default async function() {
 }
 
 export async function scripts() {
-    return (
+    return awaitStream(
         src("src/mod/**/*.ts", { base: "src" })
             .pipe(
                 flatmap(function (stream, file) {
@@ -40,10 +40,6 @@ export async function scripts() {
             .pipe(rename(path => (path.dirname = path.dirname.replace(/^mod\//, ""))))
             .pipe(dest("dist"))
     );
-}
-
-export default async function () {
-    return await scripts();
 }
 
 async function transpileTypeScriptToLua(tempDir, luaPath) {
@@ -75,4 +71,10 @@ function printDiagnostics(diagnostics) {
             getNewLine: () => "\n",
         })
     );
+}
+
+async function awaitStream(stream) {
+    return new Promise((resolve, reject) => {
+        stream.on("finish", resolve).on("error", reject);
+    });
 }
