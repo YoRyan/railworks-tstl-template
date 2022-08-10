@@ -1,6 +1,6 @@
 import { writeFile } from "fs/promises";
 import gulp from "gulp";
-const { dest, src } = gulp;
+const { dest, src, watch } = gulp;
 import { stream } from "gulp-execa";
 import filter from "gulp-filter";
 import flatmap from "gulp-flatmap";
@@ -9,6 +9,10 @@ import rename from "gulp-rename";
 import path from "path";
 import ts from "typescript";
 import tstl from "typescript-to-lua";
+
+export default async function() {
+    watch(["src/mod/**/*.ts", "src/lib/**/*.ts"], scripts);
+}
 
 export async function scripts() {
     return (
