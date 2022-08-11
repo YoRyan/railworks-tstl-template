@@ -1,5 +1,9 @@
 {
   "type": "module",
+  "scripts": {
+    "watch": "gulp",
+    "build": "gulp all"
+  },
   "dependencies": {
     "gulp": "^4.0.2",
     "gulp-execa": "^4.1.0",

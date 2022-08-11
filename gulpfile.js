@@ -10,8 +10,12 @@ import path from "path";
 import ts from "typescript";
 import tstl from "typescript-to-lua";
 
-export default async function() {
+export default async function () {
     watch(["src/mod/**/*.ts", "src/lib/**/*.ts"], scripts);
+}
+
+export async function all() {
+    await scripts();
 }
 
 export async function scripts() {
