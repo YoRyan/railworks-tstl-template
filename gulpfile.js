@@ -47,15 +47,21 @@ export async function scripts() {
 }
 
 async function transpileTypeScriptToLua(tempDir, luaPath) {
-    // We need the root tsconfig.json node to set the value of "include".
     const tsconfig = path.join(tempDir, "tsconfig.json");
-    await writeFile(tsconfig, `{ "include": ["${path.join(tempDir, "@types")}", "${path.join(tempDir, "mod")}"] }`);
+    // We need the root tsconfig.json node to set the value of "include".
+    await writeFile(
+        tsconfig,
+        JSON.stringify({
+            include: [path.join(tempDir, "@types"), path.join(tempDir, "mod")],
+        })
+    );
 
     const result = tstl.transpileProject(tsconfig, {
         target: ts.ScriptTarget.ESNext,
         moduleResolution: ts.ModuleResolutionKind.NodeJs,
         types: ["lua-types/5.0"],
         strict: true,
+        baseUrl: tempDir,
         typeRoots: [path.join(tempDir, "@types")],
         luaTarget: tstl.LuaTarget.Lua50,
         luaLibImport: tstl.LuaLibImportKind.Inline,
