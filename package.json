@@ -14,7 +14,7 @@
     "lua-types": "^2.12.0",
     "npx": "^10.2.2",
     "typescript": "^4.7.4",
-    "typescript-to-lua": "file:vendor/typescript-to-lua-for-5.0-892b2cf364436c0a5c8dad9274b84f8888739de3.tgz"
+    "typescript-to-lua": "file:vendor/typescript-to-lua-for-5.0-7d90ef7e2258a9a713c13552b112318be0daab8b.tgz"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
