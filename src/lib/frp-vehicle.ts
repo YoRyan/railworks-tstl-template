@@ -178,22 +178,48 @@ export class FrpVehicle extends FrpEntity {
         });
     }
 
+    /**
+     * Create an event stream that fires while the current rail vehicle is being
+     * controlled by the player, either as an engine, helper, or wagon.
+     * @returns The new stream, which contains some useful vehicle state.
+     */
     createPlayerUpdateStream() {
         return this.playerUpdateSource.createStream();
     }
 
+    /**
+     * Create an event stream that fires while the current rail vehicle is
+     * under the control of the simulation, as opposed to the player.
+     * @returns The new stream, which contains some useful vehicle state.
+     */
     createAiUpdateStream() {
         return this.aiUpdateSource.createStream();
     }
 
+    /**
+     * Create an event stream from the OnControlValueChange() callback, which
+     * fires when the player manipulates any control value.
+     * @returns The new stream of control value change events.
+     */
     createOnCvChangeStream() {
         return this.cvChangeSource.createStream();
     }
 
+    /**
+     * Create an event stream from the OnConsistMessage() callback, which fires
+     * when a neighboring vehicle in a player train sends a message.
+     * @returns The new stream of consist messages.
+     */
     createOnConsistMessageStream() {
         return this.consistMessageSource.createStream();
     }
 
+    /**
+     * Create an event stream from the OnCameraEnter() and OnCameraLeave()
+     * callbacks, which fire when the player is controlling this vehicle and
+     * changes the current camera view.
+     * @returns The new stream of camera states.
+     */
     createOnCameraStream() {
         return this.vehicleCameraSource.createStream();
     }

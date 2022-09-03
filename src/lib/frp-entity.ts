@@ -26,6 +26,10 @@ export class FrpEntity {
         this.onInit = onInit;
     }
 
+    /**
+     * Create an event stream of frame times from the Update() callback.
+     * @returns The new stream of numbers.
+     */
     createUpdateStream() {
         return this.updateSource.createStream();
     }

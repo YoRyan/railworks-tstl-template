@@ -28,14 +28,30 @@ export class FrpEngine extends FrpVehicle {
         });
     }
 
+    /**
+     * Create an event stream that fires while the current rail vehicle is the
+     * player-controlled engine.
+     * @returns The new stream, which contains some useful vehicle state.
+     */
     createPlayerWithKeyUpdateStream() {
         return this.playerWithKeyUpdateSource.createStream();
     }
 
+    /**
+     * Create an event stream that fires while the current rail vehicle is a
+     * helper in the player train.
+     * @returns The new stream, which contains some useful vehicle state.
+     */
     createPlayerWithoutKeyUpdateStream() {
         return this.playerWithoutKeyUpdateSource.createStream();
     }
 
+    /**
+     * Create an event stream from the OnCustomSignalMessage() callback, which
+     * fires when the player-controlled engine receives a custom message from
+     * a lineside signal.
+     * @returns The new stream of signal messages.
+     */
     createOnSignalMessageStream() {
         return this.signalMessageSource.createStream();
     }
