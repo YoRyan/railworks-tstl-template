@@ -1,7 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "lint": "prettier --write .",
+    "lint": "prettier --check .",
+    "fix:prettier": "prettier --write .",
     "watch": "gulp",
     "build": "gulp all"
   },
