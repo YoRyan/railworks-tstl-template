@@ -1,5 +1,5 @@
+import colors from "@colors/colors";
 import { spawn } from "child_process";
-import * as fs from "fs";
 import * as fsp from "fs/promises";
 import { glob } from "glob";
 import minimist from "minimist";
@@ -121,10 +121,17 @@ async function globEntryPoints() {
 
 async function timedTranspile(entryFile: Path, virtualBundle: [string, string][]) {
     const startMs = nowTime();
-    await transpile(entryFile, virtualBundle);
+    let err = undefined;
+    try {
+        await transpile(entryFile, virtualBundle);
+    } catch (e) {
+        err = e;
+    }
     const endMs = nowTime();
 
-    console.log(`${entryFile.relative()} - ${endMs - startMs}ms`);
+    const entryPath = colors.gray(entryFile.relative());
+    const result = err !== undefined ? colors.red(err + "") : `${endMs - startMs}ms`;
+    console.log(`${entryPath} ${result}`);
 }
 
 async function transpile(entryFile: Path, virtualBundle: [string, string][]) {
@@ -152,7 +159,7 @@ async function transpile(entryFile: Path, virtualBundle: [string, string][]) {
         const luaPath = path.join("./dist", path.relative("./mod", tf.outPath));
         const dirPath = path.dirname(luaPath);
         const outPath = path.join(dirPath, path.basename(luaPath, ".lua") + ".out");
-        fs.mkdirSync(dirPath, { recursive: true });
+        await fsp.mkdir(dirPath, { recursive: true });
         // "Lua" mode permits inspection of the transpiled Lua source.
         if (argv.lua) {
             await fsp.writeFile(luaPath, tf.lua);
@@ -181,7 +188,13 @@ function printDiagnostics(diagnostics: ts.Diagnostic[]) {
 
 async function compileLua(outPath: string, lua: string) {
     const luac = spawn("luac", ["-o", outPath, "-"], { stdio: ["pipe", "inherit", "inherit"] });
+    const exited = new Promise(resolve => luac.on("close", resolve));
     await writeStreamAsync(luac.stdin, lua);
+    luac.stdin.end();
+    await exited;
+    if (luac.exitCode !== 0) {
+        throw new Error("Lua compilation failed");
+    }
 }
 
 async function writeStreamAsync(stream: Writable, chunk: any) {
