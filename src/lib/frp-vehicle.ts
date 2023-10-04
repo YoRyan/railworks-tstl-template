@@ -1,7 +1,7 @@
 import * as c from "./constants";
 import * as frp from "./frp";
 import { FrpEntity, FrpSource } from "./frp-entity";
-import { rejectUndefined } from "./frp-extra";
+import { once, rejectUndefined } from "./frp-extra";
 import * as rw from "./railworks";
 
 /**
@@ -40,7 +40,7 @@ export enum SensedDirection {
 /**
  * Represents an OnControlValueChange() event.
  */
-export type ControlValueChange = [name: string, index: number, value: number];
+export type ControlValueChange = [name: string, value: number];
 
 /**
  * Represents an OnConsistMessage() event.
@@ -138,8 +138,8 @@ export class FrpVehicle extends FrpEntity {
 
             // Door status
             const doorsOpen = [
-                (this.rv.GetControlValue("DoorsOpenCloseLeft", 0) ?? 0) > 0.5,
-                (this.rv.GetControlValue("DoorsOpenCloseRight", 0) ?? 0) > 0.5,
+                (this.rv.GetControlValue("DoorsOpenCloseLeft") ?? 0) > 0.5,
+                (this.rv.GetControlValue("DoorsOpenCloseRight") ?? 0) > 0.5,
             ] as VehicleDoors;
 
             if (isPlayer) {
@@ -232,15 +232,14 @@ export class FrpVehicle extends FrpEntity {
      * movements, values will not be produced until a brief period after the
      * simulation has initialized.
      * @param name The name of the controlvalue.
-     * @param index The index of the controlvalue, usually 0.
      * @returns The new stream of numbers.
      */
-    mapGetCvStream(name: string, index: number): (eventStream: frp.Stream<VehicleUpdate>) => frp.Stream<number> {
+    mapGetCvStream(name: string): (eventStream: frp.Stream<VehicleUpdate>) => frp.Stream<number> {
         return eventStream =>
             frp.compose(
                 eventStream,
                 frp.filter(_ => frp.snapshot(this.areControlsSettled)),
-                frp.map(_ => this.rv.GetControlValue(name, index)),
+                frp.map(_ => this.rv.GetControlValue(name)),
                 rejectUndefined()
             );
     }
@@ -251,15 +250,14 @@ export class FrpVehicle extends FrpEntity {
      * movements, values will not be produced until a brief period after the
      * simulation has initialized.
      * @param name The name of the control.
-     * @param index The index of the control, usually 0.
      * @returns The new stream of values.
      */
-    createOnCvChangeStreamFor(name: string, index: number): frp.Stream<number> {
+    createOnCvChangeStreamFor(name: string): frp.Stream<number> {
         return frp.compose(
             this.createOnCvChangeStream(),
             frp.filter(_ => frp.snapshot(this.areControlsSettled)),
-            frp.filter(([cvcName, cvcIndex]) => cvcName === name && cvcIndex === index),
-            frp.map(([, , value]) => value)
+            frp.filter(([cvcName]) => cvcName === name),
+            frp.map(([, value]) => value)
         );
     }
 
@@ -268,13 +266,35 @@ export class FrpVehicle extends FrpEntity {
      * for the OnControlValueChange() callback. This is the closest a script
      * can get to intercepting every possible change of the controlvalue.
      * @param name The name of the control.
-     * @param index The index of the control, usually 0.
      * @returns The new stream of values.
      */
-    createGetCvAndOnCvChangeStreamFor(name: string, index: number): frp.Stream<number> {
-        const onUpdate$ = frp.compose(this.createPlayerUpdateStream(), this.mapGetCvStream(name, index));
-        const onCvChange$ = this.createOnCvChangeStreamFor(name, index);
+    createGetCvAndOnCvChangeStreamFor(name: string): frp.Stream<number> {
+        const onUpdate$ = frp.compose(this.createPlayerUpdateStream(), this.mapGetCvStream(name));
+        const onCvChange$ = this.createOnCvChangeStreamFor(name);
         return frp.compose(onUpdate$, frp.merge(onCvChange$));
+    }
+
+    /**
+     * Create an event stream that fires once for the Resume() callback, or if
+     * not resuming from save, the first Update() callback after the
+     * controlvalues have settled.
+     * This is useful for setting initial controlvalues without modifying the
+     * engine blueprint.
+     * @returns A stream that emits true if the game is being restored from a
+     * save state; false if it is starting from a new session.
+     */
+    createFirstUpdateAfterControlsSettledStream(): frp.Stream<boolean> {
+        const resume$ = frp.compose(
+            this.createOnResumeStream(),
+            frp.map(() => true)
+        );
+        return frp.compose(
+            this.createUpdateStream(),
+            frp.map(_ => false),
+            frp.filter(_ => frp.snapshot(this.areControlsSettled)),
+            frp.merge(resume$),
+            once()
+        );
     }
 
     /**
@@ -328,8 +348,8 @@ export class FrpVehicle extends FrpEntity {
     setup() {
         super.setup();
 
-        OnControlValueChange = this.chain(OnControlValueChange, (name, index, value) => {
-            this.cvChangeSource.call([name, index, value]);
+        OnControlValueChange = this.chain(OnControlValueChange, (name, _index, value) => {
+            this.cvChangeSource.call([name, value]);
         });
         OnConsistMessage = this.chain(OnConsistMessage, (id, content, dir) => {
             this.consistMessageSource.call([id, content, dir]);

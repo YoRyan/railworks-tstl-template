@@ -21,6 +21,13 @@ export function debug(eventStream: frp.Stream<any>) {
 }
 
 /**
+ * An event stream that produces no events.
+ */
+export function nullStream<T>(): frp.Stream<T> {
+    return _ => {};
+}
+
+/**
  * Creates a state machine that records the last and current values of the event
  * stream.
  * @param initState The initial value of the state machine.
@@ -75,29 +82,6 @@ export function once<T>(): (eventStream: frp.Stream<T>) => frp.Stream<T> {
                 return evt;
             })
         );
-}
-
-/**
- * Merges event stream A into event stream B only if B has not yet produced any
- * events.
- */
-export function mergeBeforeStart<A, B>(
-    eventStreamA: frp.Stream<A>
-): (eventStreamB: frp.Stream<B>) => frp.Stream<A | B> {
-    return eventStreamB => {
-        return next => {
-            let started = false;
-            eventStreamA(value => {
-                if (!started) {
-                    next(value);
-                }
-            });
-            eventStreamB(value => {
-                started = true;
-                next(value);
-            });
-        };
-    };
 }
 
 /**

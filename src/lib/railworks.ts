@@ -156,7 +156,7 @@ export type NoRevert = 0;
 /**
  * Signal message types that are provided by the core game code.
  */
-export enum SignalMessage {
+export enum SignalMessageId {
     ResetSignalState = 0,
     InitialiseSignalToBlocked = 1,
     JunctionStateChange = 2,
@@ -166,7 +166,7 @@ export enum SignalMessage {
     OccupationDecrement = 11,
 }
 
-export enum ConsistMessage {
+export enum ConsistMessageId {
     SigmsgCustom = 15,
 }
 
@@ -521,8 +521,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @returns True if the control exists
      */
-    ControlExists(name: string, index: number) {
-        const [r] = Call(this.fn("ControlExists"), name, index);
+    ControlExists(name: string) {
+        const [r] = Call(this.fn("ControlExists"), name, 0);
         return (r as number) === 1;
     }
 
@@ -533,8 +533,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @returns The value for the control
      */
-    GetControlValue(name: string, index: number) {
-        const [r] = Call(this.fn("GetControlValue"), name, index);
+    GetControlValue(name: string) {
+        const [r] = Call(this.fn("GetControlValue"), name, 0);
         return r as number | undefined;
     }
 
@@ -545,8 +545,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @param value the value to set the control to
      */
-    SetControlValue(name: string, index: number, value: number) {
-        Call(this.fn("SetControlValue"), name, index, value);
+    SetControlValue(name: string, value: number) {
+        Call(this.fn("SetControlValue"), name, 0, value);
     }
 
     /**
@@ -556,8 +556,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @param value the value to set the control to
      */
-    SetControlTargetValue(name: string, index: number, value: number) {
-        Call(this.fn("SetControlTargetValue"), name, index, value);
+    SetControlTargetValue(name: string, value: number) {
+        Call(this.fn("SetControlTargetValue"), name, 0, value);
     }
 
     /**
@@ -567,8 +567,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @returns The control's minimum value
      */
-    GetControlMinimum(name: string, index: number) {
-        const [r] = Call(this.fn("GetControlMinimum"), name, index);
+    GetControlMinimum(name: string) {
+        const [r] = Call(this.fn("GetControlMinimum"), name, 0);
         return r as number | undefined;
     }
 
@@ -579,8 +579,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @returns The control's maximum value
      */
-    GetControlMaximum(name: string, index: number) {
-        const [r] = Call(this.fn("GetControlMaximum"), name, index);
+    GetControlMaximum(name: string) {
+        const [r] = Call(this.fn("GetControlMaximum"), name, 0);
         return r as number | undefined;
     }
 
@@ -622,8 +622,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @returns 0 = unlocked, 1 = locked
      */
-    IsControlLocked(name: string, index: number) {
-        const [r] = Call(this.fn("IsControlLocked"), name, index);
+    IsControlLocked(name: string) {
+        const [r] = Call(this.fn("IsControlLocked"), name, 0);
         if (r === 1) {
             return true;
         } else if (r === 0) {
@@ -641,8 +641,8 @@ export class RailVehicle extends RenderedEntity {
      * multiple controls with the same name)
      * @param locked True = lock a control, False = unlock a control
      */
-    LockControl(name: string, index: number, locked: boolean) {
-        Call(this.fn("LockControl"), name, index, locked);
+    LockControl(name: string, locked: boolean) {
+        Call(this.fn("LockControl"), name, 0, locked);
     }
 }
 
@@ -1173,7 +1173,7 @@ export class Signal extends RenderedEntity {
      * the receiving signal is expected not to pass forward the message.
      */
     SendSignalMessage(
-        message: SignalMessage | number,
+        message: SignalMessageId | number,
         argument: string,
         direction: SignalDirection,
         link: SignalDirection = SignalDirection.Forward,
@@ -1204,7 +1204,7 @@ export class Signal extends RenderedEntity {
      * using the script method OnCustomSignalMessage passing the argument to the
      * engine script.
      */
-    SendConsistMessage(message: ConsistMessage, argument: string) {
+    SendConsistMessage(message: ConsistMessageId, argument: string) {
         Call(this.fn("SendConsistMessage"), message, argument);
     }
 
