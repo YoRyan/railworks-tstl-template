@@ -149,6 +149,7 @@ async function transpile(entryFile: Path, virtualBundle: [string, string][]) {
         sourceMapTraceback: false,
         luaBundle: bundleFile.relative(),
         luaBundleEntry: entryFile.relative(),
+        noResolvePaths: ["Assets/**/*"],
     });
     printDiagnostics(result.diagnostics);
 
